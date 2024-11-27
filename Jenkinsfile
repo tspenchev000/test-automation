@@ -1,3 +1,6 @@
+def git_url = 'https://github.com/tspenchev000/test-automation.git'
+def Branch = "unknown"
+
 pipeline {
     agent any;
     options {
@@ -29,7 +32,6 @@ pipeline {
             steps {
                 git(
                     branch: "${Branch}",
-                    credentialsId: git_credentials,
                     url: git_url
                 )
             }
