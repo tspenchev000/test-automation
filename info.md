@@ -1,4 +1,5 @@
 # ArgoCD information 
+
 ## Install ArgoCD CLI
 
 ```bash
@@ -16,7 +17,9 @@ argocd: v2.13.2+dc43124
   Compiler: gc
   Platform: linux/amd64
 ```
+
 ## ArgoCD UI: admin/Change-me-tomorrow-2
+
 ## ArgoCD bitbucket information
 https://bitbucket.org/tm-prod/kubernetes-iac.git
 tmbuildjenkins@thinkmarkets.com 
@@ -28,6 +31,7 @@ inventory/<ld5>/cluster-config.yaml : {{ argocd_externalip }}
 argocd login --core
 kubectl config set-context --current --namespace=argocd
 ```
+
 ##  Creating new argocd flow 
 ```bash
 argocd proj create ld5-app-uat -d https://kubernetes.default.svc,ld5-app-uat -s https://bitbucket.org/tm-prod/kubernetes-iac.git
@@ -45,7 +49,8 @@ argocd app create uat-test \
     --sync-option CreateNamespace=true \
 (ooptional)    --dest-namespace uat-test
 ```
-# Listing information
+
+## Listing information
 ```
 [root@ld5tmlk8sc01 ~]# argocd proj list
 NAME         DESCRIPTION  DESTINATIONS                                SOURCES                                           CLUSTER-RESOURCE-WHITELIST  NAMESPACE-RESOURCE-BLACKLIST  SIGNATURE-KEYS  ORPHANED-RESOURCES  DESTINATION-SERVICE-ACCOUNTS
@@ -66,6 +71,7 @@ Renew TLS:
 ```bash
 /usr/local/bin/kubectl create -n argocd secret tls argocd-server-tls --save-config --dry-run=client --key=/etc/letsencrypt/live/argocd.tfxcorp.com/privkey.pem --cert=/etc/letsencrypt/live/argocd.tfxcorp.com/fullchain.pem -o yaml | kubectl apply -f -
 ```
+
 ```
 cd /etc/kubernetes
 
