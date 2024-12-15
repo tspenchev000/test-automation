@@ -24,8 +24,10 @@ argocd: v2.13.2+dc43124
 https://bitbucket.org/tm-prod/kubernetes-iac.git
 tmbuildjenkins@thinkmarkets.com 
 k8s-argocd-readonly/<tmbuildjenkins-read-key.secret>
-## ArgoCD is checking every 1-3 min git repositories for configuration changes. Because of this for ArgoCD is dedicated separate IP different from Nginx Ingress Controller, which can help in firewall/acl definitions 
+
+ArgoCD is checking every 1-3 min git repositories for configuration changes. Because of this for ArgoCD is dedicated separate IP different from Nginx Ingress Controller, which can help in firewall/acl definitions 
 inventory/<ld5>/cluster-config.yaml : {{ argocd_externalip }}
+
 ## CLI sample commands
 ```bash
 argocd login --core
