@@ -5,7 +5,7 @@
 ### Install Consul as backend state for Terraform installation
 Machine is LD5TMLVAULT02
 
-bash```
+```
 wget https://releases.hashicorp.com/consul/1.20.1/consul_1.20.1_linux_amd64.zip
 unzip consul_1.20.1_linux_amd64.zip
 mv consul /usr/bin
@@ -15,7 +15,7 @@ useradd consul -d /opt/consul
 
 Define consul as a service via 
 nano /usr/lib/systemd/system/consul.service
-bash```
+```
 [Unit]
 Description="HashiCorp Consul - A service mesh solution"
 Documentation=https://www.consul.io/
@@ -38,7 +38,7 @@ LimitNOFILE=65536
 [Install]
 WantedBy=multi-user.target
 ```
-bash```
+```
 systemctl enable consul.service
 systemctl start consul.service
 ```
