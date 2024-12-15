@@ -1,6 +1,6 @@
 ## Cunsul information
 
-### Access consul at [link](https://ld5tmlvault02.tfxcorp.com)
+### Access consul at <a href="https://ld5tmlvault02.tfxcorp.com" target="_blank">link</a>
 
 ### Install Consul as backend state for Terraform installation
 Machine is LD5TMLVAULT02
