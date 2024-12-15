@@ -5,7 +5,7 @@ Officail repo can be found on [link](https://github.com/kubernetes-sigs/kubespra
 git clone https://github.com/kubernetes-sigs/kubespray.git
 
 
-## Downloading entire kubernetes-iac repo (kubespray is already included in it)
+## Download kubernetes-iac repo (kubespray is already included in it)
 
 ```
 sudo git clone https://tspenchev2023@bitbucket.org/tm-prod/kubernetes-iac.git
@@ -21,7 +21,7 @@ Receiving objects: 100% (3/3), done.
 ```
 
 If you need to change permissions to current user (ansible)
-bash```
+```
 sudo chown -R ansible: kubernetes-iac
 cd kubernetes-iac
 ```
@@ -78,7 +78,6 @@ For Celium CNI ref: [celium](https://docs.cilium.io/en/latest/installation/k8s-i
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ## Random info
-
 ```
 SELINUX !!!!! - just install it on target machines pip install selinux for root user  --> python3 -m pip install selinux
 # python3.11 -m venv /tmp/3.11
