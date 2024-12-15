@@ -3,8 +3,8 @@ Script should be executed with admin credentials. You can find instructions how 
 Machine and environment configuration is stored in terraform/vmware/config-ld5/terraform.tfvars
 NB: General rule of thumb: You should not change any other file than terraform/vmware/config-ld5/terraform.tfvars and kubespray/inventory/ld5/hosts.yaml
 
-# Initial setup:
-## Step 1: Terraform 
+## Initial setup:
+### Step 1: Terraform 
 
 ```bash
 cd ./kubernetes-iac/terraform/vmware/config-ld5
@@ -20,13 +20,13 @@ To destroy environment execute and confirm
 terraform destoy 
 ```
 
-## Step 2: Kubespray via Ansible
+### Step 2: Kubespray via Ansible
 Update kubespray/inventory/ld5/hosts.yaml with nesessary host information
 You can change values in kubespray/inventory/ld5/cluster-config.yaml but on your own risk. Do not touch any other file from kybespray folder.
 
 ```bash
 cd /opt/kubernetes-iac/kubespray
-(optional) you can create custom python environment refer to docs/k8s-kubespray.txt
+(optional) you can create custom python environment refer to docs/k8s-kubespray.md
 pip install -r requirements.txt
 ansible-playbook cluster.yml -i inventory/ld5/hosts.yaml -e @inventory/ld5/cluster-config.yaml --user=ansible --become --become-user=root --flush-cache
 ```
@@ -41,7 +41,7 @@ ansible-playbook -i inventory/ld5/hosts.yaml reset.yml --become --become-user=ro
 
 Now you should be able to access ArgoCD at https://<argocd_externalip>  with password provided in cluster-config.yaml
 
-## Step 3: Use ArgoCD to configure rest of the cluster . For more detailed information ref: [docs/k8s-argocd.txt](./docs/k8s-argocd.txt)
+### Step 3: Use ArgoCD to configure rest of the cluster . For more detailed information ref: [docs/k8s-argocd.md](./docs/k8s-argocd.md)
 NB: do not use main branch because Argo will pull data every 3 min and will look for changes
 
 ```bash
@@ -60,4 +60,4 @@ argocd app create uat-test \
     --sync-option CreateNamespace=true
 ```
 
-# Additional installation instructions, cli commands and configuration parameters can be found in dos folder in respective files
+### Additional installation instructions, cli commands and configuration parameters can be found in dos folder in respective files
