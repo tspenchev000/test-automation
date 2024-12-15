@@ -1,63 +1,152 @@
-# VMWare environment
-Script should be executed with admin credentials. You can find instructions how to setup your in terraform/vmware/config-ld5/terraform.tfvars
-Machine and environment configuration is stored in terraform/vmware/config-ld5/terraform.tfvars
-NB: General rule of thumb: You should not change any other file than terraform/vmware/config-ld5/terraform.tfvars and kubespray/inventory/ld5/hosts.yaml
+## Cert-Manager information
 
-## Initial setup:
-### Step 1: Terraform 
+Download specific version of cert manager
 
-```bash
-cd ./kubernetes-iac/terraform/vmware/config-ld5
-terraform init --reconfigure
-terraform plan
+helm repo add jetstack https://charts.jetstack.io --force-update
+
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Since cert-manager can not issue certificate for some reason?! as workaround cert is issued with certbot application from OS on C01 and then imported in the namespace 
+
+Create TLS namespace cert-test:
 ```
-To create environment execute and confirm
-```bash
-terraform apply
+/usr/local/bin/kubectl create -n cert-test secret tls secret-tfxcorp-com-tls --cert=/etc/letsencrypt/live/tfxcorp.com/fullchain.pem --key=/etc/letsencrypt/live/tfxcorp.com/privkey.pem
 ```
-To destroy environment execute and confirm
-```bash
-terraform destoy 
+Renew TLS namespace cert-test:
 ```
-
-### Step 2: Kubespray via Ansible
-Update kubespray/inventory/ld5/hosts.yaml with nesessary host information
-You can change values in kubespray/inventory/ld5/cluster-config.yaml but on your own risk. Do not touch any other file from kybespray folder.
-
-```bash
-cd /opt/kubernetes-iac/kubespray
-(optional) you can create custom python environment refer to docs/k8s-kubespray.md
-pip install -r requirements.txt
-ansible-playbook cluster.yml -i inventory/ld5/hosts.yaml -e @inventory/ld5/cluster-config.yaml --user=ansible --become --become-user=root --flush-cache
+/usr/local/bin/kubectl create -n cert-test secret tls secret-tfxcorp-com-tls --save-config --dry-run=client --key=/etc/letsencrypt/live/tfxcorp.com/privkey.pem --cert=/etc/letsencrypt/live/tfxcorp.com/fullchain.pem -o yaml | kubectl apply -f -
 ```
-When initial setup of kubernetes cluster finish we need to install additional modules: MetalLB, ArgoCD, Nginx Ingress Controler and Cert Manager.
-```bash
-ansible-playbook playbooks/cluster-additionalsteps.yml -i inventory/ld5/hosts.yaml -e @inventory/ld5/cluster-config.yaml --user=ansible --become --become-user=root --flush-cache
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+cmctl:  https://cert-manager.io/docs/reference/cmctl/#installation
+
+
+curl -fsSL -o cmctl https://github.com/cert-manager/cmctl/releases/download/v2.1.1/cmctl_linux_amd64
+chmod 0755 cmctl
+sudo mv cmctl /usr/local/bin
+
+[root@ld5tmlk8sc01 cert]# cmctl check api
+The cert-manager API is ready
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+cloudflare: https://ruanbekker.hashnode.dev/cert-manager-dns-challenge-with-cloudflare-on-kubernetes
+
+https://cert-manager.io/docs/troubleshooting/
+https://cert-manager.io/docs/troubleshooting/acme/
+
 ```
-To reset/delete kubernetes cluster use 
-```bash
-ansible-playbook -i inventory/ld5/hosts.yaml reset.yml --become --become-user=root
-```
+kubectl get issuer
+kubectl get clusterissuer
 
-Now you should be able to access ArgoCD at https://<argocd_externalip>  with password provided in cluster-config.yaml
+kubectl describe issuer <letsencrypt-http>
+kubectl describe clusterissuer <letsencrypt-http>
 
-### Step 3: Use ArgoCD to configure rest of the cluster . For more detailed information ref: [docs/k8s-argocd.md](./docs/k8s-argocd.md)
-NB: do not use main branch because Argo will pull data every 3 min and will look for changes
+kubectl describe certificaterequest <example-com-2745722290>
+kubectl describe order <example-com-2745722290-439160286>
 
-```bash
-argocd proj create ld5-app-uat -d https://kubernetes.default.svc,ld5-app-uat -s https://bitbucket.org/tm-prod/kubernetes-iac.git
-argocd repo add https://bitbucket.org/tm-prod/kubernetes-iac.git --username tmbuildjenkins --password <tmbuildjenkins-read-key.secret>
-
-argocd app create uat-test \
-    --repo https://bitbucket.org/tm-prod/kubernetes-iac.git \
-    --path service-a \
-    --revision uat-test \
-    --dest-server  https://kubernetes.default.svc \
-    --directory-recurse \
-    --sync-policy automated \
-    --self-heal \
-    --sync-option Prune=true \
-    --sync-option CreateNamespace=true
+kubectl get challenges
 ```
 
-### Additional installation instructions, cli commands and configuration parameters can be found in dos folder in respective files
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+```
+[root@ld5tmlk8sc01 kubernetes]# kubectl get challenges -n argocd -o wide
+NAME                                         STATE     DOMAIN               REASON                                                                                             AGE
+argocd-certificate-1-1568510716-1516881485   pending   argocd.tfxcorp.com   Waiting for DNS-01 challenge propagation: DNS record for "argocd.tfxcorp.com" not yet propagated   42m
+
+
+kubectl describe challenge argocd-certificate-1-1568510716-1516881485
+[root@ld5tmlk8sc01 kubernetes]# kubectl describe challenge argocd-certificate-1-1568510716-1516881485 -n argocd
+Name:         argocd-certificate-1-1568510716-1516881485
+Namespace:    argocd
+Labels:       <none>
+Annotations:  <none>
+API Version:  acme.cert-manager.io/v1
+Kind:         Challenge
+Metadata:
+  Creation Timestamp:  2024-12-13T15:40:18Z
+  Finalizers:
+    finalizer.acme.cert-manager.io
+  Generation:  1
+  Owner References:
+    API Version:           acme.cert-manager.io/v1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  Order
+    Name:                  argocd-certificate-1-1568510716
+    UID:                   bacd7dba-7f4b-4b8e-b901-f67329ccfaea
+  Resource Version:        36069
+  UID:                     2fa3676d-c93f-4aeb-b34f-b03af68ffd69
+Spec:
+  Authorization URL:  https://acme-v02.api.letsencrypt.org/acme/authz/2111231365/444327547305
+  Dns Name:           argocd.tfxcorp.com
+  Issuer Ref:
+    Kind:  ClusterIssuer
+    Name:  letsencrypt-production
+  Key:     63H0RXaoQOqvjirVo_AYyB0bfXylgzvy7IjY4riuFFM
+  Solver:
+    dns01:
+      Cloudflare:
+        API Key Secret Ref:
+          Key:   api-key
+          Name:  cloudflare-api-key-secret
+        Email:   it-certificates@thinkmarkets.com
+  Token:         5Wa9MZwpoju0PbFCBxW9mIAvL7JP_RHfxSZpLhBzB8k
+  Type:          DNS-01
+  URL:           https://acme-v02.api.letsencrypt.org/acme/chall/2111231365/444327547305/vUkx4g
+  Wildcard:      false
+Status:
+  Presented:   true
+  Processing:  true
+  Reason:      Waiting for DNS-01 challenge propagation: DNS record for "argocd.tfxcorp.com" not yet propagated
+  State:       pending
+Events:
+  Type    Reason     Age   From                     Message
+  ----    ------     ----  ----                     -------
+  Normal  Started    44m   cert-manager-challenges  Challenge scheduled for processing
+  Normal  Presented  44m   cert-manager-challenges  Presented challenge using DNS-01 challenge mechanism
+[root@ld5tmlk8sc01 kubernetes]#
+```
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+https://ruanbekker.hashnode.dev/cert-manager-dns-challenge-with-cloudflare-on-kubernetes
+```
+kubectl create secret generic cloudflare-api-key-secret \
+  --from-literal=api-key=[YOUR_CLOUDFLARE_API_KEY]
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-dns01-issuer
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: you@example.com  # your email address for updates
+    privateKeySecretRef:
+      name: letsencrypt-dns01-private-key
+    solvers:
+    - dns01:
+        cloudflare:
+          email: you@example.com # your cloudflare account email address
+          apiTokenSecretRef:
+            name: cloudflare-api-key-secret
+            key: api-key
+```
+
+
+```
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: default-workshop-certificate
+  namespace: default
+spec:
+  secretName: default-workshop-example-tls
+  issuerRef:
+    name: letsencrypt-dns01-issuer
+    kind: ClusterIssuer
+  commonName: workshop.example.com
+  dnsNames:
+  - workshop.example.com
+  - '*.workshop.example.com'
+```
